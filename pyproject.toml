@@ -1,0 +1,13 @@
+[project]
+name = "new-cbo-reports"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "duckdb>=1.4.4",
+    "polars>=1.38.0",
+    "pyarrow>=23.0.0",
+    "pycapitol>=0.2.0",
+    "streamlit>=1.54.0",
+]
