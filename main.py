@@ -42,7 +42,7 @@ def fetch_cdg_data(url):
     estimates = bill["cboCostEstimates"]
     return [estimate["url"] for estimate in estimates][0]
 
-
+@st.cache_data
 def get_df():
     con = create_duckdb_con()
     rel = con.execute(f"""
