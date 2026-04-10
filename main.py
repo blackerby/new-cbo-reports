@@ -36,7 +36,7 @@ def create_duckdb_con():
 def fetch_cdg_data(url):
     path = url.split(".gov")[1]
     url = CDG_API_URL + path
-    response = requests.get(url, headers={"x-api-key": API_KEY})
+    response = requests.get(url, headers={"x-api-key": API_KEY}, params={"format": "json"})
     data = response.json()
     bill = data["bill"]
     estimates = bill["cboCostEstimates"]
