@@ -1,18 +1,24 @@
 from datetime import date, timedelta
 import os
+import re
 
 import duckdb
 import polars as pl
-from pycapitol import url_for
 import requests
 import streamlit as st
-
 
 CURRENT_CONGRESS = str((date.today().year - 1789) // 2 + 1)
 CBO_URL = f"https://www.cbo.gov/rss/{CURRENT_CONGRESS}congress-cost-estimates.xml"
 CDG_API_URL = "https://api.congress.gov/v3"
 YESTERDAY = date.today() - timedelta(days=1)
 API_KEY = os.getenv("CDG_API_KEY", "DEMO_KEY")
+
+
+def url_for(bill_number):
+    bill_type, number = [
+        s.replace(".", "").replace(" ", "").lower() for s in bill_number.rsplit(".", 1)
+    ]
+    return f"{CDG_API_URL}/bill/{CURRENT_CONGRESS}/{bill_type}/{number}"
 
 
 def create_duckdb_con():
@@ -34,13 +40,14 @@ def create_duckdb_con():
 
 
 def fetch_cdg_data(url):
-    path = url.split(".gov")[1]
-    url = CDG_API_URL + path
-    response = requests.get(url, headers={"x-api-key": API_KEY}, params={"format": "json"})
+    response = requests.get(
+        url, headers={"x-api-key": API_KEY}, params={"format": "json"}
+    )
     data = response.json()
     bill = data["bill"]
     estimates = bill["cboCostEstimates"]
     return [estimate["url"] for estimate in estimates][0]
+
 
 @st.cache_data
 def get_df():
@@ -50,12 +57,13 @@ def get_df():
     from '{CBO_URL}' where Bill_Number is not null;
     """)
 
-    cite = pl.lit(CURRENT_CONGRESS) + pl.col("Bill_Number")
     df = (
         rel.pl()
         .filter(pl.col("Date").dt.date() == YESTERDAY)
         .with_columns(
-            cite.map_elements(url_for, return_dtype=pl.String).alias("Bill URL")
+            pl.col("Bill_Number")
+            .map_elements(url_for, return_dtype=pl.String)
+            .alias("Bill URL")
         )
         .with_columns(
             pl.col("Bill URL")
