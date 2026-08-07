@@ -46,7 +46,8 @@ def fetch_cdg_data(url):
     data = response.json()
     bill = data["bill"]
     estimates = bill["cboCostEstimates"]
-    return [estimate["url"] for estimate in estimates][0]
+    # reverse to get latest first
+    return [estimate["url"] for estimate in reversed(estimates)][0]
 
 
 @st.cache_data
